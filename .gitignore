@@ -1,0 +1,15 @@
+.env
+
+# PHP
+php/log/*
+
+# Nginx
+nginx/log/*
+
+#postgres
+database/data/
+
+#application
+www/*
+
+!.keep

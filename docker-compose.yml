@@ -1,0 +1,70 @@
+version: "3.7"
+services:
+  php:
+    build:
+      context: ./php
+      args:
+        user: ${USER_NAME}
+        uid: ${USER_ID}
+        githubOauth: ${GITHUB_OAUTH}
+    image: ${APP_NAME}-php
+    container_name: ${APP_NAME}-php
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./www:/var/www/
+      - ./php/log:/var/log/
+    links:
+      - postgres
+    expose:
+      - 9000
+    networks:
+      rede:
+        ipv4_address: 10.8.8.3
+
+  nginx:
+    build:
+      context: ./nginx
+      args:
+        SERVER_NAME: ${SERVER_NAME}
+        DIR_BASE: ${DIR_BASE}
+        SERVER_ROOT: ${SERVER_ROOT}
+    image: ${APP_NAME}-nginx
+    container_name: ${APP_NAME}-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./www:${DIR_BASE}
+      - ./nginx/log:/var/log/nginx/
+    links:
+      - php
+    networks:
+      rede:
+        ipv4_address: 10.8.8.2
+
+  postgres:
+    image: postgres:13
+    container_name: ${APP_NAME}-postgres
+    environment:
+      - POSTGRES_USER=dev
+      - POSTGRES_PASSWORD=dev
+      - POSTGRES_DB=dev
+    volumes:
+      - ./database/data:/var/lib/postgresql/data
+      - ./database/dumps:/var/dumps
+    expose:
+      - "5432"
+
+    networks:
+      rede:
+        ipv4_address: 10.8.8.4
+
+
+
+networks:
+  rede:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.8.8.0/16
